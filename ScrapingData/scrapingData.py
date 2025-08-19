@@ -26,10 +26,10 @@ if content_tag:
     if len(texts) >= 3:
         meeting_date = texts[2]  # วันพฤหัสบดีที่ 27 มีนาคม 2568
 
-print("📌 Title:", title)
-print("📌 Meeting No (Raw):", meeting_no)
-print("📌 Meeting Seq (Extracted):", meeting_seq)
-print("📌 Date:", meeting_date)
+print("Title:", title)
+print("Meeting No (Raw):", meeting_no)
+print("Meeting Seq (Extracted):", meeting_seq)
+print("Date:", meeting_date)
 
 agendas = []
 resolutions = []
@@ -90,32 +90,32 @@ if content_tag:
 # -------------------------
 # แสดงผล
 # -------------------------
-print("📌 Agendas / หัวเรื่อง:")
+print("Agendas / หัวเรื่อง:")
 for a in agendas:
     print("-", a)
 
-print("\n📌 Summary / สรุปสาระสำคัญ:")
+print("\nSummary / สรุปสาระสำคัญ:")
 for s in summaries:
     print("-", s)
 
-print("\n📌 Resolutions / มติการประชุม:")
+print("\nResolutions / มติการประชุม:")
 for r in resolutions:
     print("-", r[:300], "...")  # preview 300 ตัวอักษร
 
 
 with open("ScrapingData/Data/output.txt", "w", encoding="utf-8") as f:
-    f.write(f"📌 Agendas / หัวเรื่อง:\n")
-    f.write(f"📌 Title: {title}\n")
-    f.write(f"📌 Meeting No (Raw): {meeting_no}\n")
-    f.write(f"📌 Meeting Seq (Extracted): {meeting_seq}\n")
-    f.write(f"📌 Date: {meeting_date}\n\n")
+    f.write(f"Agendas / หัวเรื่อง:\n")
+    f.write(f"Title: {title}\n")
+    f.write(f"Meeting No (Raw): {meeting_no}\n")
+    f.write(f"Meeting Seq (Extracted): {meeting_seq}\n")
+    f.write(f"Date: {meeting_date}\n\n")
     for a in agendas:
         f.write(a + "\n")
     
-    f.write("\n📌 Resolutions / มติการประชุม:\n")
+    f.write("\nResolutions / มติการประชุม:\n")
     for r in resolutions:
         f.write(r + "\n\n")  # เพิ่มบรรทัดว่างระหว่างมติ
     
-    f.write("\n📌 Summary / สรุปสาระสำคัญ:\n")
+    f.write("\nSummary / สรุปสาระสำคัญ:\n")
     for s in summaries:
         f.write(s + "\n")
