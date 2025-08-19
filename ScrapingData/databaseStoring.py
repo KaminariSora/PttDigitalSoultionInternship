@@ -7,8 +7,9 @@ from datetime import datetime
 
 mongoDB = "mongodb://localhost:27017/"
 DataBaseName = "PttDigitalSolution"
-websiteUrl = "https://www.eppo.go.th/index.php/th/component/k2/item/21607-nepc-prayut-25-12-67"
-organization = "กพช."
+websiteUrl = "https://www.eppo.go.th/index.php/th/component/k2/item/14269-cepa-prayut65"
+org = "กบง"
+organization = org + "."
 documentType = "มติ"
 
 client = MongoClient(mongoDB)
@@ -336,6 +337,7 @@ meeting_id = meetings_col.insert_one(meeting_doc).inserted_id
 # Attendees
 for person in attendees:
     attendees_col.insert_one({
+        "meeting_ref": meeting_ref,
         "meeting_seq": meeting_seq,
         "position": person["position"], 
         "role": person["role"],         
@@ -346,6 +348,7 @@ for person in attendees:
 for i, agenda in enumerate(agendas, start=1):
     # Insert เข้า collection "เรื่องที่ประชุม"
     agendas_col.insert_one({
+        "meeting_ref": meeting_ref,
         "meeting_seq": meeting_seq,
         "agenda_no": i,
         "agenda_title": agenda["agenda"]
@@ -353,6 +356,7 @@ for i, agenda in enumerate(agendas, start=1):
 
     # Insert เข้า collection "รายละเอียดการประชุม"
     details_col.insert_one({
+        "meeting_ref": meeting_ref,
         "meeting_seq": meeting_seq,
         "agenda_no": i,
         "summary": " ".join(agenda["summaries"]) if agenda["summaries"] else "",
