@@ -14,7 +14,8 @@ INPUT_FILES = [
     r"ScrapingData/Data/InputData/ตัวอย่างมติกพช.docx",
 ]
 
-ORGANIZATION = "กพง."
+org = "กพง"
+ORGANIZATION = org + "."
 DOC_TYPE = "มติ"
 
 # --------------------------
