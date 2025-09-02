@@ -87,6 +87,21 @@ def parse_thai_date(date_str: str):
     minute = int(m.group("minute")) if m.group("minute") else 0
     return datetime(year, month, day, hour, minute)
 
+def split_position_role(line: str):
+    """แยก 'ตำแหน่ง .... บทบาท' -> (position, role)"""
+    line = norm(line)
+    parts = re.split(r"\s{4,}", line)
+    parts = [p for p in parts if p]
+    if len(parts) >= 2:
+        return parts[0], parts[-1]
+    ROLE_WORDS = r"(ประธานกรรมการ|รองประธานกรรมการ|กรรมการและเลขานุการ|กรรมการและผู้ช่วยเลขานุการ|กรรมการ|เลขานุการ|รองประธานกรรมการทำหน้าที่ประธาน)"
+    m = re.search(ROLE_WORDS + r"$", line)
+    if m:
+        role = m.group(1)
+        position = norm(line[:m.start()].rstrip(" ."))
+        return position, role
+    return line, ""  # เดาไม่ได้ก็คืนทั้งบรรทัดเป็น position
+
 # --------------------------
 # Core: Parse from file
 # --------------------------
@@ -123,7 +138,12 @@ def scrape_from_file(file_path: str, organization: str, documentType: str = "ม
         for i in range(0, len(attendee_lines), 2):
             pos = attendee_lines[i]
             name = attendee_lines[i+1] if i+1 < len(attendee_lines) else ""
-            attendees.append({"position": pos, "role": "", "name": name})
+            position, role = split_position_role(pos)
+            attendees.append({
+                "position": position,
+                "role": role,
+                "name": name
+            })
     except StopIteration:
         pass
 
