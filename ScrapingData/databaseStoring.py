@@ -8,7 +8,7 @@ from datetime import datetime
 # CONFIG
 # --------------------------
 MONGO_URI = "mongodb://localhost:27017/"
-DB_NAME = "PttDigitalSolution"
+DB_NAME = "ResolutionScraping"
 # กพช
 urls_NEPC = [
     "https://www.eppo.go.th/index.php/th/component/k2/item/21607-nepc-prayut-25-12-67",
@@ -140,6 +140,15 @@ def get_next_ref_for_org(org: str) -> int:
     )
     return ret["seq"]
 
+def get_next_ref() -> int:
+    ret = db["counters"].find_one_and_update(
+        {"_id": "meeting_ref"},
+        {"$inc": {"seq": 1}},  
+        upsert=True,       
+        return_document=ReturnDocument.AFTER
+    )
+    return ret["seq"]
+
 def split_position_role(line: str):
     """แยก 'ตำแหน่ง .... บทบาท' -> (position, role)"""
     line = norm(line)
@@ -147,7 +156,7 @@ def split_position_role(line: str):
     parts = [p for p in parts if p]
     if len(parts) >= 2:
         return parts[0], parts[-1]
-    ROLE_WORDS = r"(ประธานกรรมการ|รองประธานกรรมการ|กรรมการและเลขานุการ|กรรมการและผู้ช่วยเลขานุการ|กรรมการ|เลขานุการ)"
+    ROLE_WORDS = r"(ประธานกรรมการ|รองประธานกรรมการ|กรรมการและเลขานุการ|กรรมการและผู้ช่วยเลขานุการ|กรรมการ|เลขานุการ|รองประธานกรรมการทำหน้าที่ประธาน)"
     m = re.search(ROLE_WORDS + r"$", line)
     if m:
         role = m.group(1)
@@ -294,8 +303,11 @@ def scrape_and_insert(url: str, organization: str, documentType: str = "มต�
         print(f"Already exists, skip: {url}")
         return
 
-    meeting_ref = get_next_ref_for_org(organization)
+    # meeting_ref = get_next_ref_for_org(organization)
+    meeting_ref = get_next_ref()
     agenda_titles = [a.get("agenda", "").strip() for a in agendas if a.get("agenda")]
+
+    agenda_string = ','.join(agenda_titles)
 
     meeting_doc = {
         "title": title,
@@ -307,7 +319,7 @@ def scrape_and_insert(url: str, organization: str, documentType: str = "มต�
         "meeting_date_obj": meeting_date_obj,
         "organization": organization,
         "doc_type": documentType,
-        "total_title": agenda_titles
+        "total_title": agenda_string
     }
     meetings_col.insert_one(meeting_doc)
 
