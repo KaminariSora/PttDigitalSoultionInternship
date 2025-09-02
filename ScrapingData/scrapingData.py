@@ -19,12 +19,11 @@ if content_tag:
         title = texts[0]
     if len(texts) >= 2:
         meeting_no = texts[1]
-        # แยกเลขในวงเล็บด้วย regex
         m = re.search(r"\(ครั้งที่\s*(\d+)\)", meeting_no)
         if m:
-            meeting_seq = m.group(1)  # 71
+            meeting_seq = m.group(1)
     if len(texts) >= 3:
-        meeting_date = texts[2]  # วันพฤหัสบดีที่ 27 มีนาคม 2568
+        meeting_date = texts[2]
 
 print("Title:", title)
 print("Meeting No (Raw):", meeting_no)
@@ -46,7 +45,6 @@ if content_tag:
         if not text:
             continue
 
-        # ตรวจสอบหัวเรื่อง (Agenda)
         a_tag = p.find("a")
         if a_tag and a_tag.get("id"):
             if temp_text and current_section == "resolution":
@@ -56,7 +54,6 @@ if content_tag:
             agendas.append(a_tag.get_text(strip=True))
             continue
 
-        # ตรวจสอบมติการประชุม (Resolution)
         span_tag = p.find("span", style=lambda v: v and "underline" in v)
         if span_tag:
             span_text = span_tag.get_text()
@@ -73,9 +70,8 @@ if content_tag:
                 current_section = "summary"
                 continue
 
-        # เก็บข้อความตาม section ปัจจุบัน
+
         if current_section == "agenda":
-            # ข้อความหลังหัวเรื่องถือเป็น resolution
             current_section = "resolution"
             temp_text += text + "\n"
         elif current_section == "resolution":
@@ -83,13 +79,9 @@ if content_tag:
         elif current_section == "summary":
             summaries.append(text)
 
-    # ถ้ามี resolution สุดท้ายค้างอยู่
     if temp_text and current_section == "resolution":
         resolutions.append(temp_text.strip())
 
-# -------------------------
-# แสดงผล
-# -------------------------
 print("Agendas / หัวเรื่อง:")
 for a in agendas:
     print("-", a)
@@ -100,7 +92,7 @@ for s in summaries:
 
 print("\nResolutions / มติการประชุม:")
 for r in resolutions:
-    print("-", r[:300], "...")  # preview 300 ตัวอักษร
+    print("-", r[:300], "...")
 
 
 with open("ScrapingData/Data/output.txt", "w", encoding="utf-8") as f:
@@ -114,7 +106,7 @@ with open("ScrapingData/Data/output.txt", "w", encoding="utf-8") as f:
     
     f.write("\nResolutions / มติการประชุม:\n")
     for r in resolutions:
-        f.write(r + "\n\n")  # เพิ่มบรรทัดว่างระหว่างมติ
+        f.write(r + "\n\n")
     
     f.write("\nSummary / สรุปสาระสำคัญ:\n")
     for s in summaries:
