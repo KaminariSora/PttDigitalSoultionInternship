@@ -3,13 +3,9 @@ import os
 from pymongo import MongoClient, ReturnDocument
 from datetime import datetime
 
-# --------------------------
-# CONFIG
-# --------------------------
 MONGO_URI = "mongodb://localhost:27017/"
 DB_NAME = "DocxResolutionScraping"
 
-# ใช้งานกับไฟล์แทน URL
 INPUT_FILES = [
     r"ScrapingData/Data/InputData/ตัวอย่างมติกพช.docx",
 ]
@@ -18,9 +14,6 @@ org = "กพง"
 ORGANIZATION = org + "."
 DOC_TYPE = "มติ"
 
-# --------------------------
-# MongoDB
-# --------------------------
 client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 meetings_col  = db["meetings"]
@@ -28,9 +21,6 @@ attendees_col = db["attendees"]
 agendas_col   = db["agendas"]
 details_col   = db["details"]
 
-# --------------------------
-# Helpers
-# --------------------------
 try:
     from docx import Document
     HAS_DOCX = True
@@ -101,11 +91,8 @@ def split_position_role(line: str):
         role = m.group(1)
         position = norm(line[:m.start()].rstrip(" ."))
         return position, role
-    return line, ""  # เดาไม่ได้ก็คืนทั้งบรรทัดเป็น position
+    return line, ""
 
-# --------------------------
-# Core: Parse from file
-# --------------------------
 def scrape_from_file(file_path: str, organization: str, documentType: str = "มติ"):
     text = read_text_from_file(file_path)
     lines = [norm(l) for l in text.splitlines() if norm(l)]
@@ -116,7 +103,6 @@ def scrape_from_file(file_path: str, organization: str, documentType: str = "ม
     meeting_date = ""
     location = ""
 
-    # ประมวลผล header
     for l in lines[:5]:
         if "ครั้งที่" in l:
             meeting_no_full = l
@@ -130,7 +116,6 @@ def scrape_from_file(file_path: str, organization: str, documentType: str = "ม
 
     meeting_date_obj = parse_thai_date(meeting_date)
 
-    # ผู้มาประชุม (หา keyword แล้วตัดจนเจอ "เรื่องที่")
     attendees = []
     try:
         start_idx = next(i for i,l in enumerate(lines) if "ผู้มาประชุม" in l)
@@ -153,37 +138,31 @@ def scrape_from_file(file_path: str, organization: str, documentType: str = "ม
     current_section = None
 
     for l in lines:
-    # ---------- เจอวาระใหม่ ----------
         if re.match(r"^(เรื่องที่|วาระที่)\s*\d+", l):
             if current_agenda:
-                agendas.append(current_agenda)   # ปิดอันเก่า
+                agendas.append(current_agenda)
             current_agenda = {"agenda": l, "summaries": [], "resolutions": []}
             current_section = None
             continue
 
-        # ---------- เจอหัวข้อ summary ----------
         if re.search(r"สรุป\s*สาระ\s*สำคัญ", l):
             current_section = "summary"
             continue
 
-        # ---------- เจอหัวข้อ resolution ----------
         if re.match(r"^(มติ|ที่ประชุมมีมติ)", l):
             current_section = "resolution"
             continue
 
-        # ---------- เก็บข้อความ ----------
         if current_agenda:
             if current_section == "summary":
                 current_agenda["summaries"].append(l)
             elif current_section == "resolution":
                 current_agenda["resolutions"].append(l)
 
-    # ---------- ปิด agenda สุดท้าย ----------
     if current_agenda:
         agendas.append(current_agenda)
 
 
-    # Insert MongoDB
     if meetings_col.find_one({"meeting_no_full": meeting_no_full, "organization": organization}):
         print(f"Already exists, skip: {file_path}")
         return
@@ -221,11 +200,7 @@ def scrape_from_file(file_path: str, organization: str, documentType: str = "ม
             "summary": " ".join(agenda["summaries"]),
             "resolution": " ".join(agenda["resolutions"])
         })
-
     print(f"✅ Inserted from file: {file_path}")
 
-# --------------------------
-# Run
-# --------------------------
 for file in INPUT_FILES:
     scrape_from_file(file, ORGANIZATION, DOC_TYPE)
