@@ -55,6 +55,10 @@ def norm(s: str) -> str:
     s = s.replace("\xa0", " ")
     return re.sub(r"\s+", " ", s.strip())
 
+def clean_person_name(line: str):
+    line = norm(line)
+    return line.strip("()[]{}").strip()
+
 def parse_thai_date(date_str: str):
     s = norm(date_str).translate(THAI2AR)
     pat = re.compile(
@@ -123,7 +127,8 @@ def scrape_from_file(file_path: str, organization: str, documentType: str = "ม
         attendee_lines = lines[start_idx+1:end_idx]
         for i in range(0, len(attendee_lines), 2):
             pos = attendee_lines[i]
-            name = attendee_lines[i+1] if i+1 < len(attendee_lines) else ""
+            person_name = attendee_lines[i+1] if i+1 < len(attendee_lines) else ""
+            name = clean_person_name(person_name)
             position, role = split_position_role(pos)
             attendees.append({
                 "position": position,
