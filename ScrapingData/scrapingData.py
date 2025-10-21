@@ -111,3 +111,72 @@ with open("ScrapingData/Data/output.txt", "w", encoding="utf-8") as f:
     f.write("\nSummary / สรุปสาระสำคัญ:\n")
     for s in summaries:
         f.write(s + "\n")
+
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib import colors
+
+# ✅ ลงทะเบียนฟอนต์ภาษาไทย
+pdfmetrics.registerFont(TTFont('THSarabun', 'ScrapingData/fonts/Sarabun-Regular.ttf'))
+
+# ✅ ตั้งชื่อไฟล์ PDF
+pdf_path = "ScrapingData/Data/output_thai.pdf"
+doc = SimpleDocTemplate(pdf_path, pagesize=A4)
+
+# ✅ กำหนดสไตล์ให้ใช้ฟอนต์ไทย
+title_style = ParagraphStyle(
+    'title_style',
+    fontName='THSarabun',
+    fontSize=20,
+    textColor=colors.darkblue,
+    spaceAfter=10
+)
+
+section_style = ParagraphStyle(
+    'section_style',
+    fontName='THSarabun',
+    fontSize=16,
+    textColor=colors.darkred,
+    spaceAfter=6
+)
+
+normal_style = ParagraphStyle(
+    'normal_style',
+    fontName='THSarabun',
+    fontSize=14,
+    leading=18,  # ระยะบรรทัด
+)
+
+# ✅ เริ่มสร้างเอกสาร
+story = []
+
+story.append(Paragraph("สรุปข้อมูลการประชุม", title_style))
+story.append(Paragraph(f"หัวข้อ: {title}", normal_style))
+story.append(Paragraph(f"การประชุม: {meeting_no}", normal_style))
+story.append(Paragraph(f"ครั้งที่: {meeting_seq}", normal_style))
+story.append(Paragraph(f"วันที่ประชุม: {meeting_date}", normal_style))
+story.append(Spacer(1, 12))
+
+# หัวข้อการประชุม
+story.append(Paragraph("หัวข้อการประชุม / Agenda", section_style))
+for a in agendas:
+    story.append(Paragraph(f"- {a}", normal_style))
+story.append(Spacer(1, 10))
+
+# มติการประชุม
+story.append(Paragraph("มติการประชุม / Resolution", section_style))
+for r in resolutions:
+    story.append(Paragraph(r.replace("\n", "<br/>"), normal_style))
+story.append(Spacer(1, 10))
+
+# สรุปสาระสำคัญ
+story.append(Paragraph("สรุปสาระสำคัญ / Summary", section_style))
+for s in summaries:
+    story.append(Paragraph(s, normal_style))
+
+# ✅ สร้าง PDF
+doc.build(story)
+print(f"✅ บันทึกไฟล์ PDF ภาษาไทยเรียบร้อย: {pdf_path}")
